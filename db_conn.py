@@ -1,5 +1,6 @@
 #%% This line is for enabling interactive python in VSCode
 import sqlite3
+DEFAULT_PASSWORD = "Password" #Gloabal string constant for default password assignment
 
 #%% This line is for enabling interactive python in VSCode
 #Creates the database with all proper tables, columns, and constraints
@@ -70,22 +71,21 @@ def initialize():
         db.close()    #this ensures the database connection closes properly 
         print("Error Creating Database")
         return False  #and then notifies that this function call encountered an exception
-initialize()
+initialize() #Debug line
 
 #%% This line is for enabling interactive python in VSCode
 #Adds a new user into the users table
 #Arguements userID, nameF, nameL, skills, and permission correspond to the users table columns respectively
-#A default password is assigned for the user which they must change
+#A default password of 'Password' is assigned for the user which they must change
 #The user executing this command can not create a new user with permission greater than or equal to theirs
 #Returns True if the command runs successfully
 #Returns False if an exception occurs
 def addUser(userID, nameF, nameL, skills, permission):
     with sqlite3.connect("database.db") as db: #Connection established to database
         c = db.cursor() #Cursor object created
-    defaultPassword = "Password"    #Default assigned password to be changed by user
     addUserCommand = (" INSERT INTO users VALUES (?, ?, ?, ?, ?, ?) ")  #Row insert command
     try: #Attempts to execute the following SQL commands
-        c.execute(addUserCommand, [(userID), (nameF), (nameL), (defaultPassword), (skills), (permission)]) #Execute command
+        c.execute(addUserCommand, [(userID), (nameF), (nameL), (DEFAULT_PASSWORD), (skills), (permission)]) #Execute command
         db.commit()   #Save all changes made to database
         db.close()    #Close the connection to database
         print("Command Executed Successfully")
@@ -94,7 +94,7 @@ def addUser(userID, nameF, nameL, skills, permission):
         db.close()    #this ensures the database connection closes properly 
         print("Error Executing Command")
         return False  #and then notifies that this function call encountered an exception
-addUser(0, "Bryan", "Mirra", 0, 0)
+addUser(0, "Bryan", "Mirra", 0, 0) #Debug line
 
 #%% This line is for enabling interactive python in VSCode
 #Removes a user from the users table
@@ -116,7 +116,7 @@ def removeUser(userID):
         db.close()    #this ensures the database connection closes properly 
         print("Error Executing Command")
         return False  #and then notifies that this function call encountered an exception
-removeUser(0)
+removeUser(0) #Debug line
 
 #%% This line is for enabling interactive python in VSCode
 #Gets all data for the user with the specified ID
@@ -137,16 +137,29 @@ def getUser(userID):
         db.close()    #this ensures the database connection closes properly 
         print("Error Executing Command")
         return None   #and then returns None
-getUser(0)
+getUser(0) #Debug line
 
 #%% This line is for enabling interactive python in VSCode
-# TODO: THIS
-def changePassword(userID, password):
+#Changes any column data for an existing user given their ID number
+#Arguements userID, nameF, nameL, skills, and permission correspond to the users table columns respectively
+#Columns will only update if given a corresponding arguement
+#You may update any selection of columns you wish at once by selecting which arguements to include or omit in the function call
+#To reset a users password call this with their ID and the gloabal string constant DEFAULT_PASSWORD
+#The user executing this command can not change any data for users with permission greater than or equal to theirs
+#Returns True if the command runs successfully
+#Returns False if an exception occurs
+def updateUser(userID, nameF = None, nameL = None, password = None, skills = None, permission = None):
     with sqlite3.connect("database.db") as db: #Connection established to database
         c = db.cursor() #Cursor object created
-    Command = ("")  #command
+    updateUserCommand = (" UPDATE users SET nameFirst = ?, nameLast = ?, password = ?, skills = ?, permission = ? WHERE identification = ? ") ##Update user command
     try: #Attempts to execute the following SQL commands
-        c.execute(Command, []) #Execute command
+        currentUserData = getUser(userID) #Retrieves current user data to use for any column data that is not given
+        newNameF = nameF if nameF != None else currentUserData[0][1] #Columns will be updated to the arguments given in function call
+        newNameL = nameL if nameL != None else currentUserData[0][2] #If no value is given for a column it will remain as whatever
+        newPassword = password if password != None else currentUserData[0][3] #is currently in that column
+        newSkills = skills if skills != None else currentUserData[0][4]
+        newPermission = permission if permission != None else currentUserData[0][5]
+        c.execute(updateUserCommand, [(newNameF), (newNameL), (newPassword), (newSkills), (newPermission), (userID)]) #Execute command
         db.commit()   #Save all changes made to database
         db.close()    #Close the connection to database
         print("Command Executed Successfully")
@@ -155,87 +168,20 @@ def changePassword(userID, password):
         db.close()    #this ensures the database connection closes properly 
         print("Error Executing Command")
         return False  #and then notifies that this function call encountered an exception
+updateUser(0, "Steven", "Natz", "newpassword", 1, 1) #Debug line
 
-# TODO: THIS
-def resetPassword(userID):
-    with sqlite3.connect("database.db") as db: #Connection established to database
-        c = db.cursor() #Cursor object created
-    Command = ("")  #command
-    try: #Attempts to execute the following SQL commands
-        c.execute(Command, []) #Execute command
-        db.commit()   #Save all changes made to database
-        db.close()    #Close the connection to database
-        print("Command Executed Successfully")
-        return True   #Notify that this function call completed successfully
-    except Exception: #If an exception occurs
-        db.close()    #this ensures the database connection closes properly 
-        print("Error Executing Command")
-        return False  #and then notifies that this function call encountered an exception
 
-# TODO: THIS
-def changeNameF():
-    with sqlite3.connect("database.db") as db: #Connection established to database
-        c = db.cursor() #Cursor object created
-    Command = ("")  #command
-    try: #Attempts to execute the following SQL commands
-        c.execute(Command, []) #Execute command
-        db.commit()   #Save all changes made to database
-        db.close()    #Close the connection to database
-        print("Command Executed Successfully")
-        return True   #Notify that this function call completed successfully
-    except Exception: #If an exception occurs
-        db.close()    #this ensures the database connection closes properly 
-        print("Error Executing Command")
-        return False  #and then notifies that this function call encountered an exception
 
-# TODO: THIS
-def changeNameL():
-    with sqlite3.connect("database.db") as db: #Connection established to database
-        c = db.cursor() #Cursor object created
-    Command = ("")  #command
-    try: #Attempts to execute the following SQL commands
-        c.execute(Command, []) #Execute command
-        db.commit()   #Save all changes made to database
-        db.close()    #Close the connection to database
-        print("Command Executed Successfully")
-        return True   #Notify that this function call completed successfully
-    except Exception: #If an exception occurs
-        db.close()    #this ensures the database connection closes properly 
-        print("Error Executing Command")
-        return False  #and then notifies that this function call encountered an exception
 
-# TODO: THIS
-def changeSkillsUser():
-    with sqlite3.connect("database.db") as db: #Connection established to database
-        c = db.cursor() #Cursor object created
-    Command = ("")  #command
-    try: #Attempts to execute the following SQL commands
-        c.execute(Command, []) #Execute command
-        db.commit()   #Save all changes made to database
-        db.close()    #Close the connection to database
-        print("Command Executed Successfully")
-        return True   #Notify that this function call completed successfully
-    except Exception: #If an exception occurs
-        db.close()    #this ensures the database connection closes properly 
-        print("Error Executing Command")
-        return False  #and then notifies that this function call encountered an exception
 
-# TODO: THIS
-def changePermission():
-    with sqlite3.connect("database.db") as db: #Connection established to database
-        c = db.cursor() #Cursor object created
-    Command = ("")  #command
-    try: #Attempts to execute the following SQL commands
-        c.execute(Command, []) #Execute command
-        db.commit()   #Save all changes made to database
-        db.close()    #Close the connection to database
-        print("Command Executed Successfully")
-        return True   #Notify that this function call completed successfully
-    except Exception: #If an exception occurs
-        db.close()    #this ensures the database connection closes properly 
-        print("Error Executing Command")
-        return False  #and then notifies that this function call encountered an exception
+#Everything above this point has been thoroughly tested and commented
+#Everything below this point may not be fully implemented, tested, or commented
 
+
+
+
+
+#%% This line is for enabling interactive python in VSCode
 # TODO: THIS
 def addEquipment():
     with sqlite3.connect("database.db") as db: #Connection established to database
