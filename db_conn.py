@@ -129,9 +129,9 @@ def getUser(userID):
     getUserCommand = (" SELECT * FROM users WHERE identification = ? ") #User select command
     try: #Attempts to execute the following SQL commands
         c.execute(getUserCommand, [(userID)]) #Execute command
-        user = c.fetchall() #Takes results of select command
+        user = c.fetchone() #Takes results of select command
         db.close()    #Close the connection to database
-        print("Command Executed Successfully")
+        print("Command Executed Successfully" if user != None else "Error Executing Command")
         return user   #Return results of select command
     except Exception: #If an exception occurs
         db.close()    #this ensures the database connection closes properly 
@@ -154,11 +154,11 @@ def updateUser(userID, nameF = None, nameL = None, password = None, skills = Non
     updateUserCommand = (" UPDATE users SET nameFirst = ?, nameLast = ?, password = ?, skills = ?, permission = ? WHERE identification = ? ") ##Update user command
     try: #Attempts to execute the following SQL commands
         currentUserData = getUser(userID) #Retrieves current user data to use for any column data that is not given
-        newNameF = nameF if nameF != None else currentUserData[0][1] #Columns will be updated to the arguments given in function call
-        newNameL = nameL if nameL != None else currentUserData[0][2] #If no value is given for a column it will remain as whatever
-        newPassword = password if password != None else currentUserData[0][3] #is currently in that column
-        newSkills = skills if skills != None else currentUserData[0][4]
-        newPermission = permission if permission != None else currentUserData[0][5]
+        newNameF = nameF if nameF != None else currentUserData[1] #Columns will be updated to the arguments given in function call
+        newNameL = nameL if nameL != None else currentUserData[2] #If no value is given for a column it will remain as whatever
+        newPassword = password if password != None else currentUserData[3] #is currently in that column
+        newSkills = skills if skills != None else currentUserData[4]
+        newPermission = permission if permission != None else currentUserData[5]
         c.execute(updateUserCommand, [(newNameF), (newNameL), (newPassword), (newSkills), (newPermission), (userID)]) #Execute command
         db.commit()   #Save all changes made to database
         db.close()    #Close the connection to database
@@ -170,25 +170,40 @@ def updateUser(userID, nameF = None, nameL = None, password = None, skills = Non
         return False  #and then notifies that this function call encountered an exception
 updateUser(0, "Steven", "Natz", "newpassword", 1, 1) #Debug line
 
-
-
-
-
-#Everything above this point has been thoroughly tested and commented
-#Everything below this point may not be fully implemented, tested, or commented
-
-
-
-
+#%% This line is for enabling interactive python in VSCode
+#Adds a new piece of equipment into the equipment table
+#Arguements equipID, desc, and skills correspond to the equipment table columns respectively
+#This command can only be executed by users with permission >0
+#Returns True if the command runs successfully
+#Returns False if an exception occurs
+def addEquipment(equipID, desc, skills):
+    with sqlite3.connect("database.db") as db: #Connection established to database
+        c = db.cursor() #Cursor object created
+    addEquipCommand = (" INSERT INTO equipment VALUES (?, ?, ?) ")  #Add equipment command
+    try: #Attempts to execute the following SQL commands
+        c.execute(addEquipCommand, [(equipID), (desc), (skills)]) #Execute command
+        db.commit()   #Save all changes made to database
+        db.close()    #Close the connection to database
+        print("Command Executed Successfully")
+        return True   #Notify that this function call completed successfully
+    except Exception: #If an exception occurs
+        db.close()    #this ensures the database connection closes properly 
+        print("Error Executing Command")
+        return False  #and then notifies that this function call encountered an exception
+addEquipment(0, "Stepladder", 0) #Debug line
 
 #%% This line is for enabling interactive python in VSCode
-# TODO: THIS
-def addEquipment():
+#Removes a piece of equipment from the equipment table
+#equipID corresponds to identification column of the equipment table
+#This command can only be executed by users with permission >0
+#Returns True if the command runs successfully
+#Returns False if an exception occurs
+def removeEquipment(equipID):
     with sqlite3.connect("database.db") as db: #Connection established to database
         c = db.cursor() #Cursor object created
-    Command = ("")  #command
+    removeEquipCommand = (" DELETE FROM equipment WHERE identification = ? ")  #Remove equipment command
     try: #Attempts to execute the following SQL commands
-        c.execute(Command, []) #Execute command
+        c.execute(removeEquipCommand, [(equipID)]) #Execute command
         db.commit()   #Save all changes made to database
         db.close()    #Close the connection to database
         print("Command Executed Successfully")
@@ -197,30 +212,46 @@ def addEquipment():
         db.close()    #this ensures the database connection closes properly 
         print("Error Executing Command")
         return False  #and then notifies that this function call encountered an exception
+removeEquipment(0) #Debug line
 
-# TODO: THIS
-def removeEquipment():
+#%% This line is for enabling interactive python in VSCode
+#Gets all data for the equipment with the specified ID
+#equipID corresponds to identification column of the equipment table
+#Returns all data of specified equipment if the command runs successfully
+#Returns None if an exception occurs
+def getEquipment(equipID):
     with sqlite3.connect("database.db") as db: #Connection established to database
         c = db.cursor() #Cursor object created
-    Command = ("")  #command
+    getEquipCommand = (" SELECT * FROM equipment WHERE identification = ? ")  #Get equipment command
     try: #Attempts to execute the following SQL commands
-        c.execute(Command, []) #Execute command
-        db.commit()   #Save all changes made to database
+        c.execute(getEquipCommand, [(equipID)]) #Execute command
+        equip = c.fetchone() #Takes results of select command
         db.close()    #Close the connection to database
-        print("Command Executed Successfully")
-        return True   #Notify that this function call completed successfully
+        print("Command Executed Successfully" if equip != None else "Error Executing Command")
+        return equip  #Return results of select command
     except Exception: #If an exception occurs
         db.close()    #this ensures the database connection closes properly 
         print("Error Executing Command")
-        return False  #and then notifies that this function call encountered an exception
+        return None   #and then returns None
+getEquipment(0) #Debug line
 
-# TODO: THIS
-def getEquipment():
+#%% This line is for enabling interactive python in VSCode
+#Changes any column data for existing equipment given its ID number
+#Arguements equipID, desc, and skills correspond to the equipment table columns respectively
+#Columns will only update if given a corresponding arguement
+#You may update any selection of columns you wish at once by selecting which arguements to include or omit in the function call
+#This command can only be executed by users with permission >0
+#Returns True if the command runs successfully
+#Returns False if an exception occurs
+def updateEquipment(equipID, desc = None, skills = None):
     with sqlite3.connect("database.db") as db: #Connection established to database
         c = db.cursor() #Cursor object created
-    Command = ("")  #command
+    updateEquipCommand = (" UPDATE equipment SET description = ?, skills = ? WHERE identification = ? ")  #Update equipment command
     try: #Attempts to execute the following SQL commands
-        c.execute(Command, []) #Execute command
+        currentEquipData = getEquipment(equipID)
+        newDesc = desc if desc != None else currentEquipData[1]
+        newSkills = skills if skills != None else currentEquipData[2]
+        c.execute(updateEquipCommand, [(newDesc), (newSkills), (equipID)]) #Execute command
         db.commit()   #Save all changes made to database
         db.close()    #Close the connection to database
         print("Command Executed Successfully")
@@ -229,38 +260,7 @@ def getEquipment():
         db.close()    #this ensures the database connection closes properly 
         print("Error Executing Command")
         return False  #and then notifies that this function call encountered an exception
-
-# TODO: THIS
-def changeDescription():
-    with sqlite3.connect("database.db") as db: #Connection established to database
-        c = db.cursor() #Cursor object created
-    Command = ("")  #command
-    try: #Attempts to execute the following SQL commands
-        c.execute(Command, []) #Execute command
-        db.commit()   #Save all changes made to database
-        db.close()    #Close the connection to database
-        print("Command Executed Successfully")
-        return True   #Notify that this function call completed successfully
-    except Exception: #If an exception occurs
-        db.close()    #this ensures the database connection closes properly 
-        print("Error Executing Command")
-        return False  #and then notifies that this function call encountered an exception
-
-# TODO: THIS
-def changeSkillsEquipment():
-    with sqlite3.connect("database.db") as db: #Connection established to database
-        c = db.cursor() #Cursor object created
-    Command = ("")  #command
-    try: #Attempts to execute the following SQL commands
-        c.execute(Command, []) #Execute command
-        db.commit()   #Save all changes made to database
-        db.close()    #Close the connection to database
-        print("Command Executed Successfully")
-        return True   #Notify that this function call completed successfully
-    except Exception: #If an exception occurs
-        db.close()    #this ensures the database connection closes properly 
-        print("Error Executing Command")
-        return False  #and then notifies that this function call encountered an exception
+updateEquipment(0, "Soldering Iron", 1) #Debug line
 
 #%% This line is for enabling interactive python in VSCode
 #Creates a new checkout for a user and a piece of equipment
@@ -282,6 +282,7 @@ def checkout(userID, equipID):
         db.close()    #this ensures the database connection closes properly 
         print("Error Executing Command")
         return False  #and then notifies that this function call encountered an exception
+checkout(0, 0) #Debug line
 
 #%% This line is for enabling interactive python in VSCode
 #Checks whether a piece of equipment is checked out by anyone or by a specified user
@@ -296,17 +297,23 @@ def isCheckedOut(equipID, userID = None):
     isCheckoutCommand = (" SELECT * FROM checkouts WHERE equipment = ? ") if userID == None else (" SELECT * FROM checkouts WHERE user = ? AND equipment = ? ") #Select command
     try: #Attempts to execute the following SQL commands
         c.execute(isCheckoutCommand, [(equipID)] if userID == None else [(userID), (equipID)]) #Execute command
-        checkout = c.fetchall() #Gets select result
-        db.close()  #Close the connection to database
+        checkout = c.fetchone() #Gets select result
+        db.close()    #Close the connection to database
         print("Command Executed Successfully")
         return 0 if checkout == None else 1 #Returns whether an entry was found or not
     except Exception: #If an exception occurs
         db.close()    #this ensures the database connection closes properly 
         print("Error Executing Command")
         return 2      #and then notifies that this function call encountered an exception
+isCheckedOut(0) #Debug line
 
 #%% This line is for enabling interactive python in VSCode
-# TODO: WRITE COMMENT
+#Deletes a specified checkout and enters it into the return logs
+#userID and equipID correspond to the identification columns in the users and equipment tables respectively
+#Time of checkout is taken from the checkout entry being terminated
+#Time of return is set as the current local system time
+#Returns True if the command runs successfully
+#Returns False if an exception occurs
 def returns(userID, equipID):
     with sqlite3.connect("database.db") as db: #Connection established to database
         c = db.cursor() #Cursor object created
@@ -315,7 +322,7 @@ def returns(userID, equipID):
     returnCommand3 = (" INSERT INTO returnLog VALUES (?, ?, ?, datetime('now', 'localtime')) ")    #Insert returnLog row command
     try: #Attempts to execute the following SQL commands
         c.execute(returnCommand1, [(userID), (equipID)]) #Execute command
-        checkoutDateTime = c.fetchall() #Get checkout DateTime select result
+        checkoutDateTime = c.fetchone()[0] #Get checkout DateTime select result
         c.execute(returnCommand2, [(userID), (equipID)]) #Execute command
         c.execute(returnCommand3, [(userID), (equipID), (checkoutDateTime)]) #Execute command
         db.commit()   #Save all changes made to database
@@ -326,5 +333,34 @@ def returns(userID, equipID):
         db.close()    #this ensures the database connection closes properly 
         print("Error Executing Command")
         return False  #and then notifies that this function call encountered an exception
+returns(0, 0) #Debug line
 
+
+
+
+
+#Everything above this point has been thoroughly tested and commented
+#Everything below this point may not be fully implemented, tested, or commented
+
+
+
+
+
+#%% This line is for enabling interactive python in VSCode
 # TODO: FUNCTIONS FOR GENERATING REPORTS
+def debugCheckouts():
+    with sqlite3.connect("database.db") as db:
+        c = db.cursor()
+    c.execute("SELECT * FROM checkouts")
+    print(c.fetchall())
+    db.close()
+
+def debugReturns():
+    with sqlite3.connect("database.db") as db:
+        c = db.cursor()
+    c.execute("SELECT * FROM returnLog")
+    print(c.fetchall())
+    db.close()
+
+debugCheckouts()
+debugReturns()
