@@ -310,7 +310,6 @@ def reset():
     initialize()
     addUser(0, "root", "user", 0, 99)
 
-# TODO: FUNCTIONS FOR GENERATING REPORTS
 def debugCheckouts():
     with sqlite3.connect("database.db") as db:
         c = db.cursor()
@@ -324,3 +323,9 @@ def debugReturns():
     c.execute("SELECT * FROM returnLog")
     print(c.fetchall())
     db.close()
+
+# TODO: FUNCTIONS FOR GENERATING REPORTS
+#Get all checkouts
+#Get full return log
+#Get all checkout and returns for a specific user
+#Get all from a speicific time period
