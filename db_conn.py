@@ -1,5 +1,8 @@
 import sqlite3
-DEFAULT_PASSWORD = "Password" #Gloabal string constant for default password assignment
+DEFAULT_PASSWORD = "Password"   #Global string constant for default password assignment
+REPORT_TYPE_ALL_CHECKOUTS = 0   #Global integer constants for specifying report types for the generateReport function
+REPORT_TYPE_ALL_RETURN_LOGS = 1
+REPORT_TYPE_SPECIFIED_USER = 2
 
 #Creates the database with all proper tables, columns, and constraints
 #Returns True if the initialization runs successfully
@@ -67,6 +70,20 @@ def initialize():
     except Exception: #If an exception occurs
         db.close()    #this ensures the database connection closes properly
         return False  #and then notifies that this function call encountered an exception
+
+#Rests the database to its default state
+def reset():
+    with sqlite3.connect("database.db") as db:  #Connection established to database
+        c = db.cursor() #Cursor object created
+    c.execute("DROP TABLE IF EXISTS returnLog") #Deletes
+    c.execute("DROP TABLE IF EXISTS checkouts") #everything
+    c.execute("DROP TABLE IF EXISTS equipment") #in the
+    c.execute("DROP TABLE IF EXISTS users")     #database
+    c.execute("VACUUM") #Wipes all free space
+    db.commit()     #Save all changes made to database
+    db.close()      #Close the connection to database
+    initialize()    #All of the tables are reinitialized
+    addUser(0, "root", "user", 0, 99)   #A root user is created with an ID of 0, the default password, and a permission level of 99
 
 #Adds a new user into the users table
 #Arguements userID, nameF, nameL, skills, and permission correspond to the users table columns respectively
@@ -286,46 +303,42 @@ def returns(userID, equipID):
         db.close()    #this ensures the database connection closes properly 
         return False  #and then notifies that this function call encountered an exception
 
-
-
-
-
-#Everything above this point has been thoroughly tested and commented
-#Everything below this point may not be fully implemented, tested, or commented
-
-
-
-
-
-def reset():
-    with sqlite3.connect("database.db") as db:
-        c = db.cursor()
-    c.execute("DROP TABLE IF EXISTS returnLog")
-    c.execute("DROP TABLE IF EXISTS checkouts")
-    c.execute("DROP TABLE IF EXISTS equipment")
-    c.execute("DROP TABLE IF EXISTS users")
-    c.execute("VACUUM")
-    db.commit()
-    db.close()
-    initialize()
-    addUser(0, "root", "user", 0, 99)
-
-def debugCheckouts():
-    with sqlite3.connect("database.db") as db:
-        c = db.cursor()
-    c.execute("SELECT * FROM checkouts")
-    print(c.fetchall())
-    db.close()
-
-def debugReturns():
-    with sqlite3.connect("database.db") as db:
-        c = db.cursor()
-    c.execute("SELECT * FROM returnLog")
-    print(c.fetchall())
-    db.close()
-
-# TODO: FUNCTIONS FOR GENERATING REPORTS
-#Get all checkouts
-#Get full return log
-#Get all checkout and returns for a specific user
-#Get all from a speicific time period
+#Generates the specified type of report from the database tables and returns it
+#reportType is the type of report to be generated, and should use the global REPORT_TYPE variables
+#userID is an optional argument that should be used only when generating a report that requires it
+#Returns a tuple with a list entry for every row matching the given report conditions
+#Returns None if no data is found or an exception occurs
+def generateReport(reportType, userID = None):
+    switch = {  #Dictionary containing report queries keyed to the global REPORT_TYPE variables
+        REPORT_TYPE_ALL_CHECKOUTS: (""" 
+            SELECT nameFirst || ' ' || nameLast AS name, description, checkoutDateTime
+            FROM checkouts JOIN users ON users.identification = checkouts.user
+                JOIN equipment ON equipment.identification = checkouts.equipment
+            ORDER BY checkoutDateTime """),
+        REPORT_TYPE_ALL_RETURN_LOGS: ("""
+            SELECT nameFirst || ' ' || nameLast AS name, description, checkoutDateTime, returnDateTime
+            FROM returnLog JOIN users ON users.identification = returnLog.user
+                JOIN equipment ON equipment.identification = returnLog.equipment
+            ORDER BY returnDateTime """),
+        REPORT_TYPE_SPECIFIED_USER: ("""
+            SELECT description, checkoutDateTime, returnDateTime
+            FROM returnLog JOIN equipment ON equipment.identification = returnLog.equipment
+            WHERE user = ?
+            UNION ALL
+            SELECT description, checkoutDateTime, 'N/A' 
+            FROM checkouts JOIN equipment ON equipment.identification = checkouts.equipment
+            WHERE user = ?
+            ORDER BY checkoutDateTime """)}
+    generateReportCommand = switch.get(reportType, "x") #Selects the proper query from the dictionary
+    if generateReportCommand == "x": return None    #If the report type is not in the dictionary function exits and returns None
+    with sqlite3.connect("database.db") as db:  #Connection established to database
+        c = db.cursor() #Cursor object created
+    try:    #Attempts to execute the following SQL commands
+        if userID == None: c.execute(generateReportCommand) #Report is assumed to have no arguements if userID is not given
+        else: c.execute(generateReportCommand, [(userID), (userID)])    #Report uses userID arguement if it is given
+        report = c.fetchall()   #Gets select result
+        db.close()      #Close the connection to database
+        return report   #Return results of select command
+    except Exception:   #If an exception occurs
+        db.close()      #this ensures the database connection closes properly 
+        return None     #and then returns None
