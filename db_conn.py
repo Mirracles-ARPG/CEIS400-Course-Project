@@ -1,8 +1,12 @@
 import sqlite3
 DEFAULT_PASSWORD = "Password"   #Global string constant for default password assignment
-REPORT_TYPE_ALL_CHECKOUTS = 0   #Global integer constants for specifying report types for the generateReport function
-REPORT_TYPE_ALL_RETURN_LOGS = 1
-REPORT_TYPE_SPECIFIED_USER = 2
+REPORT_TYPE_ALL_USERS = 0       #Global integer constants for specifying report types for the generateReport function
+REPORT_TYPE_ALL_EQUIPMENT = 1
+REPORT_TYPE_ALL_CHECKOUTS = 2
+REPORT_TYPE_ALL_RETURN_LOGS = 3
+REPORT_TYPE_SELECT_USER_ALL = 4
+REPORT_TYPE_SELECT_USER_CHECKOUTS = 5
+REPORT_TYPE_SELECT_EQUIP_ALL = 6
 
 #Creates the database with all proper tables, columns, and constraints
 #Returns True if the initialization runs successfully
@@ -305,11 +309,22 @@ def returns(userID, equipID):
 
 #Generates the specified type of report from the database tables and returns it
 #reportType is the type of report to be generated, and should use the global REPORT_TYPE variables
-#userID is an optional argument that should be used only when generating a report that requires it
+#idNum is an optional argument that should be used only when generating a report that requires it
 #Returns a tuple with a list entry for every row matching the given report conditions
 #Returns None if no data is found or an exception occurs
-def generateReport(reportType, userID = None):
+def generateReport(reportType, idNum = None):
+    arg0 = [REPORT_TYPE_ALL_USERS, REPORT_TYPE_ALL_EQUIPMENT, REPORT_TYPE_ALL_CHECKOUTS, REPORT_TYPE_ALL_RETURN_LOGS]
+    arg1 = [REPORT_TYPE_SELECT_USER_CHECKOUTS]
+    arg2 = [REPORT_TYPE_SELECT_USER_ALL, REPORT_TYPE_SELECT_EQUIP_ALL]
     switch = {  #Dictionary containing report queries keyed to the global REPORT_TYPE variables
+        REPORT_TYPE_ALL_USERS: ("""
+            SELECT identification, nameFirst || ' ' || nameLast AS name, skills, permission
+            FROM users
+            ORDER BY identification """),
+        REPORT_TYPE_ALL_EQUIPMENT: ("""
+            SELECT *
+            FROM equipment
+            ORDER BY identification """),
         REPORT_TYPE_ALL_CHECKOUTS: (""" 
             SELECT nameFirst || ' ' || nameLast AS name, description, checkoutDateTime
             FROM checkouts JOIN users ON users.identification = checkouts.user
@@ -320,7 +335,7 @@ def generateReport(reportType, userID = None):
             FROM returnLog JOIN users ON users.identification = returnLog.user
                 JOIN equipment ON equipment.identification = returnLog.equipment
             ORDER BY returnDateTime """),
-        REPORT_TYPE_SPECIFIED_USER: ("""
+        REPORT_TYPE_SELECT_USER_ALL: ("""
             SELECT description, checkoutDateTime, returnDateTime
             FROM returnLog JOIN equipment ON equipment.identification = returnLog.equipment
             WHERE user = ?
@@ -328,14 +343,22 @@ def generateReport(reportType, userID = None):
             SELECT description, checkoutDateTime, 'N/A' 
             FROM checkouts JOIN equipment ON equipment.identification = checkouts.equipment
             WHERE user = ?
-            ORDER BY checkoutDateTime """)}
+            ORDER BY checkoutDateTime """),
+        REPORT_TYPE_SELECT_USER_CHECKOUTS: ("""
+            SELECT description, checkoutDateTime
+            FROM checkouts JOIN equipment ON equipment.identification = checkouts.equipment
+            WHERE user = ?
+            ORDER BY checkoutDateTime """),
+        REPORT_TYPE_SELECT_EQUIP_ALL: ("""
+            """)}
     generateReportCommand = switch.get(reportType, "x") #Selects the proper query from the dictionary
     if generateReportCommand == "x": return None    #If the report type is not in the dictionary function exits and returns None
     with sqlite3.connect("database.db") as db:  #Connection established to database
         c = db.cursor() #Cursor object created
     try:    #Attempts to execute the following SQL commands
-        if userID == None: c.execute(generateReportCommand) #Report is assumed to have no arguements if userID is not given
-        else: c.execute(generateReportCommand, [(userID), (userID)])    #Report uses userID arguement if it is given
+        if reportType in arg0: c.execute(generateReportCommand) #Command is executed with the correct number of arguments
+        elif reportType in arg1: c.execute(generateReportCommand, [(idNum)])
+        elif reportType in arg2: c.execute(generateReportCommand, [(idNum), (idNum)])
         report = c.fetchall()   #Gets select result
         db.close()      #Close the connection to database
         return report   #Return results of select command
