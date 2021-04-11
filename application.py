@@ -12,22 +12,22 @@ def employeeMenu():
     while True:
         userChoice = input("Enter a menu option: ")
         if userChoice == '1':
-            equipID = input("Enter Equipment ID Number to check-out: ")
+            equipID = input("\nEnter Equipment ID Number to check-out: ")
             checkout(userID, equipID)
             print("\nThis item has now been checked-out.\n\n")
             continue
         elif userChoice == '2':
-            equipID = input("Enter Equipment ID Number to check-in: ")
+            equipID = input("\nEnter Equipment ID Number to check-in: ")
             returns(userID, equipID)
             print("\nThis item has now been returned.\n\n")
             continue
         elif userChoice == '3':
-            print("Your Equipment Records:")
+            print("\nYour Equipment Records:")
             getUser(userID)
             print()
             continue
         elif userChoice == '4':
-            print("All New Equipment Orders:")
+            print("\nAll New Equipment Orders:")
             generateReport(reportType, userID = None)
             print()
             continue
@@ -61,57 +61,47 @@ def managerMenu():
     while True:
         userChoice = input("Enter a menu option: ")
         if userChoice == '1':
-            print("Full Employee Equipment Report:")
+            print("\nFull Employee Equipment Report")
             generateReport(reportType, userID = None)
-            print()
             continue
         elif userChoice == '2':
-            print("Employee Information:")
-            userID = input("Enter specific user ID: ")
+            print("\nEmployee Information")
+            userID = input("\nEnter specific user ID: ")
             getUser(userID)
-            print()
             continue
         elif userChoice == '3':
-            print("Equipment Information:")
-            equipID = input("Enter the Equipment ID: ")
+            print("\nEquipment Information")
+            equipID = input("\nEnter the Equipment ID: ")
             getEquipment(equipID)
-            print()
             continue
         elif userChoice == '4':
-            print("Checked-out Equipment Status:")
-            equipID = input("Enter the Equipment ID: ")
+            print("\nChecked-out Equipment Status")
+            equipID = input("\nEnter the Equipment ID: ")
             isCheckedOut(equip)
-            print()
             continue
         elif userChoice == '5':
-            print()
-            
-            print()
+            print("\nUpdate Existing User\n")
+            updateUser()
             continue
         elif userChoice == '6':
-            print()
-            
-            print()
+            print("\nAdd User\n")
+            addUser()
             continue
         elif userChoice == '7':
-            print()
-            
-            print()
+            print("\nRemove User\n")
+            removeUser()
             continue
         elif userChoice == '8':
-            print()
-            
-            print()
+            print("\nUpdate Existing Equipment\n")
+            updateEquipment()
             continue
         elif userChoice == '9':
-            print()
-            
-            print()
+            print("\nAdd Equipment\n")
+            addEquipment()
             continue
         elif userChoice == '10':
-            print()
-            
-            print()
+            print("\nRemove Equipment\n")
+            removeEquipment()
             continue
         elif userChoice == '11':
             cont = input("\nLog Out? (y/n): ").lower()
