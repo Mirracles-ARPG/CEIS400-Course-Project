@@ -1,50 +1,51 @@
 import db_conn, os, hashlib
 
+
 #EMPLOYEE MENU CODE
-def employeeMenu():
+def employeeMenu(userID):
     print("--- Employee Menu ---\n")
     print("What would you like to do?")
     print("1. Check-out Equipment")
     print("2. Return Equipment")
-    print("3. View Your Equipment Records")
-    print("4. Track New Equipment Orders")
+    print("3. View All Available Equipment")
+    print("4. View Your Equipment History")
     print("5. Log Out\n")
     while True:
         userChoice = input("Enter a menu option: ")
         if userChoice == '1':
             equipID = input("\nEnter Equipment ID Number to check-out: ")
-            checkout(userID, equipID)
-            print("\nThis item has now been checked-out.\n\n")
+            db_conn.checkout(userID, equipID)
+            print("\nThis item has now been checked-out.\n")
             continue
         elif userChoice == '2':
             equipID = input("\nEnter Equipment ID Number to check-in: ")
-            returns(userID, equipID)
-            print("\nThis item has now been returned.\n\n")
+            db_conn.returns(userID, equipID)
+            print("\nThis item has now been returned.\n")
             continue
         elif userChoice == '3':
-            print("\nYour Equipment Records:")
-            getUser(userID)
+            print("\nAll Available Equipment:\n")
+            print(db_conn.generateReport(db_conn.REPORT_TYPE_ALL_EQUIPMENT))
             print()
             continue
         elif userChoice == '4':
-            print("\nAll New Equipment Orders:")
-            generateReport(reportType, userID = None)
+            print("\nYour Equipment History:\n")
+            print(db_conn.generateReport(db_conn.REPORT_TYPE_SELECT_USER_CHECKOUTS, userID))
             print()
             continue
         elif userChoice == '5':
             cont = input("\nLog Out? (y/n): ").lower()
             while True:
                 if cont == "y":
-                    print("\nSuccessfully logged out.\n\n")
-                    main()
+                    print("\nSuccessfully Logged Out.\n\n")
+                    return
                 elif cont == "n":
                     print()
-                    employeeMenu()
+                    break
             
 
 
 #MANAGER MENU CODE
-def managerMenu():
+def managerMenu(userID):
     print("--- Manager Menu ---\n")
     print("What would you like to do?")
     print("1. Full Employee Equipment Report")
@@ -61,59 +62,90 @@ def managerMenu():
     while True:
         userChoice = input("Enter a menu option: ")
         if userChoice == '1':
-            print("\nFull Employee Equipment Report")
-            generateReport(reportType, userID = None)
+            print("\nFull Employee Equipment Report\n")
+            employeeID = input("Enter the Employee's ID: ")
+            print(db_conn.generateReport(db_conn.REPORT_TYPE_SELECT_USER_ALL, employeeID))
+            print()
             continue
         elif userChoice == '2':
-            print("\nEmployee Information")
-            userID = input("\nEnter specific user ID: ")
-            getUser(userID)
+            print("\nEmployee Information\n")
+            employeeID = input("Enter the Employee's ID: ")
+            print(db_conn.getUser(employeeID))
+            print()
             continue
         elif userChoice == '3':
-            print("\nEquipment Information")
-            equipID = input("\nEnter the Equipment ID: ")
-            getEquipment(equipID)
+            print("\nEquipment Information\n")
+            equipID = input("Enter the Equipment ID: ")
+            print(db_conn.getEquipment(equipID))
+            print()
             continue
         elif userChoice == '4':
-            print("\nChecked-out Equipment Status")
-            equipID = input("\nEnter the Equipment ID: ")
-            isCheckedOut(equip)
+            print("\nChecked-out Equipment Status\n")
+            equipID = input("Enter the Equipment ID: ")
+            print(db_conn.isCheckedOut(equipID))
+            print()
             continue
         elif userChoice == '5':
             print("\nUpdate Existing User\n")
-            updateUser()
+            employeeID = input("Enter the Existing User's ID: ")
+            db_conn.updateUser(employeeID)
+            print()
             continue
         elif userChoice == '6':
             print("\nAdd User\n")
-            addUser()
+            employeeID = input("Enter New Employee ID: ")
+            db_conn.addUser(employeeID)
+            print()
             continue
         elif userChoice == '7':
             print("\nRemove User\n")
-            removeUser()
+            employeeID = input("Enter Employee ID to be Removed: ")
+            db_conn.removeUser(employeeID)
+            print()
             continue
         elif userChoice == '8':
             print("\nUpdate Existing Equipment\n")
-            updateEquipment()
+            equipID = input("Enter the Existing Equipment ID: ")
+            db_conn.updateEquipment(equipID)
+            print()
             continue
         elif userChoice == '9':
             print("\nAdd Equipment\n")
-            addEquipment()
+            equipID = input("Enter New Equipment ID: ")
+            db_conn.addEquipment(equipID)
+            print()
             continue
         elif userChoice == '10':
             print("\nRemove Equipment\n")
-            removeEquipment()
+            equipID = input("Enter Equipment ID to be Removed: ")
+            db_conn.removeEquipment(equipID)
+            print()
             continue
         elif userChoice == '11':
             cont = input("\nLog Out? (y/n): ").lower()
             while True:
                 if cont == "y":
-                    print("\nSuccessfully logged out.\n\n")
-                    main()
+                    print("\nSuccessfully Logged Out.\n\n")
+                    return
                 elif cont == "n":
                     print()
-                    managerMenu()
+                    break
 
 
+def getAllUsers():
+    report, text = db_conn.generateReport(db_conn.REPORT_TYPE_ALL_USERS), ""
+    for data in report: text = text + "ID#: " + str(data[0]) + " | Name: " + data[1] + " | Skills: " + str(data[2]) + " | Permission: " + str(data[3]) + '\n'
+    return text
+
+def getAllEquipment():
+    report, text = db_conn.generateReport(db_conn.REPORT_TYPE_ALL_EQUIPMENT), ""
+    for data in report: text = text + "ID#: " + str(data[0]) + " | Name: " + data[1] + " | Skills: " + str(data[2]) + '\n'
+    return text
+
+def getEmployeeCheckouts(userID):
+    report, text = db_conn.generateReport(db_conn.REPORT_TYPE_SELECT_USER_CHECKOUTS, userID), ""
+    for data in report: text = text + "Equipment: " + data[0] + " | Checkout Time: " + data[1] + '\n'
+    return text
 
 def firstLoginPasswordChange(userID, newPassword):
     salt = os.urandom(32)
@@ -140,7 +172,7 @@ def login(userID, inputPassword):
 
 def main():
     while True:
-        userID = input("Enter your ID number: ")
+        userID = input("\nEnter your ID number: ")
         password = input("Enter your password: ")
         authenticated = login(userID, password)
         if authenticated == 0 or authenticated == 1:
@@ -155,8 +187,8 @@ def main():
                     print("Password successfully changed. Please log in with your new password.")
                     break
                 else: print("Passwords do not match!")
-        elif authenticated == 3: employeeMenu()
-        elif authenticated == 4: managerMenu()
+        elif authenticated == 3: employeeMenu(userID)
+        elif authenticated == 4: managerMenu(userID)
 
 if __name__ == "__main__":
     main()
