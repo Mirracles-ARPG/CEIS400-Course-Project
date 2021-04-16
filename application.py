@@ -14,12 +14,12 @@ def employeeMenu(userID):
         userChoice = input("Enter a menu option: ")
         if userChoice == '1':
             equipID = input("\nEnter Equipment ID Number to check-out: ")
-            db_conn.checkout(userID, equipID)
+            print(db_conn.checkout(userID, equipID))
             print("\nThis item has now been checked-out.\n")
             continue
         elif userChoice == '2':
             equipID = input("\nEnter Equipment ID Number to check-in: ")
-            db_conn.returns(userID, equipID)
+            print(db_conn.returns(userID, equipID))
             print("\nThis item has now been returned.\n")
             continue
         elif userChoice == '3':
@@ -88,37 +88,49 @@ def managerMenu(userID):
         elif userChoice == '5':
             print("\nUpdate Existing User\n")
             employeeID = input("Enter the Existing User's ID: ")
-            db_conn.updateUser(employeeID)
+            nameF = input("Enter First Name: ")
+            nameL = input("Enter Last Name: ")
+            skills = input("Enter Skills: ")
+            permission = input("Enter Permission Level: ")
+            print(db_conn.updateUser(employeeID, nameF, nameL, skills, permission))
             print()
             continue
         elif userChoice == '6':
             print("\nAdd User\n")
             employeeID = input("Enter New Employee ID: ")
-            db_conn.addUser(employeeID)
+            nameF = input("Enter First Name: ")
+            nameL = input("Enter Last Name: ")
+            skills = input("Enter Skills: ")
+            permission = input("Enter Permission Level: ")
+            print(db_conn.addUser(employeeID, nameF, nameL, skills, permission))
             print()
             continue
         elif userChoice == '7':
             print("\nRemove User\n")
             employeeID = input("Enter Employee ID to be Removed: ")
-            db_conn.removeUser(employeeID)
+            print(db_conn.removeUser(employeeID))
             print()
             continue
         elif userChoice == '8':
             print("\nUpdate Existing Equipment\n")
             equipID = input("Enter the Existing Equipment ID: ")
-            db_conn.updateEquipment(equipID)
+            desc = input("Enter Description: ")
+            skills = input("Enter Skill Level: ")
+            print(db_conn.updateEquipment(equipID, desc, skills))
             print()
             continue
         elif userChoice == '9':
             print("\nAdd Equipment\n")
             equipID = input("Enter New Equipment ID: ")
-            db_conn.addEquipment(equipID)
+            desc = input("Enter Description: ")
+            skills = input("Enter Skill Level: ")
+            print(db_conn.addEquipment(equipID, desc, skills))
             print()
             continue
         elif userChoice == '10':
             print("\nRemove Equipment\n")
             equipID = input("Enter Equipment ID to be Removed: ")
-            db_conn.removeEquipment(equipID)
+            print(db_conn.removeEquipment(equipID))
             print()
             continue
         elif userChoice == '11':
