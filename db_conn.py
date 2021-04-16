@@ -350,7 +350,14 @@ def generateReport(reportType, idNum = None):
             WHERE user = ?
             ORDER BY checkoutDateTime """),
         REPORT_TYPE_SELECT_EQUIP_ALL: ("""
-            """)}
+            SELECT nameFirst || ' ' || nameLast AS name, checkoutDateTime, returnDateTime
+            FROM returnLog JOIN users ON users.identification = returnLog.user
+            WHERE equipment = ?
+            UNION ALL
+            SELECT nameFirst || ' ' || nameLast AS name, checkoutDateTime, 'N/A' 
+            FROM checkouts JOIN users ON users.identification = checkouts.user
+            WHERE equipment = ?
+            ORDER BY checkoutDateTime """)}
     generateReportCommand = switch.get(reportType, "x") #Selects the proper query from the dictionary
     if generateReportCommand == "x": return None    #If the report type is not in the dictionary function exits and returns None
     with sqlite3.connect("database.db") as db:  #Connection established to database
