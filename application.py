@@ -1,6 +1,28 @@
 import db_conn, os, hashlib
 
 
+
+def main():
+    while True:
+        userID, password = input("Enter your ID number: "), input("Enter your password: ")
+        authenticated = login(userID, password)
+        if authenticated == 0 or authenticated == 1: print("Incorrect ID/Password Combination!")
+        elif authenticated == 2:
+            print("This is your first time logging in. You must change your password.")
+            while True:
+                newPassword, verify = input("Enter your new password: "), input("Verify your new password: ")
+                result = firstLoginPasswordChange(userID, newPassword, verify)
+                if result == 0:
+                    print("Password successfully changed. Please log in with your new password.")
+                    break
+                elif result == 1: print("Passwords do not match!")
+                elif result == 2: print("Password is too short! Your password must be at least 6 characters")
+                elif result == 3: print("Unexpected error!")
+        elif authenticated == 3: employeeMenu(userID)
+        elif authenticated == 4: managerMenu(userID)
+        elif authenticated == 5: print("Fields can not be blank!")
+        elif authenticated == 6: print("User ID must be a number!")
+
 #EMPLOYEE MENU CODE
 def employeeMenu(userID):
     print("--- Employee Menu ---\n")
@@ -41,8 +63,6 @@ def employeeMenu(userID):
                 elif cont == "n":
                     print()
                     break
-            
-
 
 #MANAGER MENU CODE
 def managerMenu(userID):
@@ -145,6 +165,90 @@ def managerMenu(userID):
 
 
 
+#0 = User not found
+#1 = Incorrect Password
+#2 = First login
+#3 = Employee authenticated
+#4 = Manager authenticated
+#5 = Input field is blank
+#6 = User ID is not a number
+def login(userID, inputPassword):
+    if userID == "" or inputPassword == "": return 5
+    if not userID.isdigit(): return 6
+    userData = db_conn.getUser(userID)
+    if userData != None:
+        userPassword = userData[3]
+        if userPassword == db_conn.DEFAULT_PASSWORD: 
+            if inputPassword == userPassword: return 2
+            else: return 1
+        else:
+            salt, key = userPassword[:32], userPassword[32:]
+            if key == hashlib.pbkdf2_hmac('sha256', inputPassword.encode('utf-8'), salt, 100000):
+                if userData[5] == 0: return 3
+                else: return 4
+            else: return 1
+    else: return 0
+
+#0 = Password changed successfully
+#1 = Passwords do not match
+#2 = Password length is too short
+#3 = Unexpected error
+def firstLoginPasswordChange(userID, newPassword, verify):
+    if newPassword != verify: return 1
+    if len(newPassword) < 6: return 2
+    salt = os.urandom(32)
+    key = hashlib.pbkdf2_hmac('sha256', newPassword.encode('utf-8'), salt, 100000)
+    if db_conn.updateUser(userID, password = salt + key): return 0
+    else: return 3
+
+#0 = Checkout successful
+#1 = User does not have the requisite skills to check out equipment
+#2 = Equipment does not exist
+#3 = Another user already has this equipment checked out
+#4 = Current user already has this equipment checked out
+#5 = Input field is blank
+#6 = Equipment ID is not a number
+#7 = Unexpected error
+def checkout(userID, equipID):
+    if equipID == "": return 5
+    if not equipID.isdigit(): return 6
+    if db_conn.getEquipment(equipID) == None: return 2
+    result = db_conn.isCheckedOut(equipID)
+    if result == 0:
+        userSkills, equipSkills = db_conn.getUser(userID)[4], db_conn.getEquipment(equipID)[2]
+        if equipSkills == 0 or equipSkills == userSkills:
+            if db_conn.checkout(userID, equipID): return 0
+            else: return 7
+        else: return 1
+    elif result == 1:
+        result = db_conn.isCheckedOut(equipID, userID)
+        if result == 0: return 3
+        elif result == 1: return 4
+        elif result == 2: return 7
+    elif result == 2: return 7
+
+#0 = Return successful
+#1 = Equipment does not exist
+#2 = No user has equipment checked out
+#3 = Current user does not have equipment checked out
+#4 = Input field is blank
+#5 = Equipment ID is not a number
+#6 = Unexpected error
+def returns(userID, equipID):
+    if equipID == "": return 4
+    if not equipID.isdigit(): return 5
+    if db_conn.getEquipment(equipID) == None: return 1
+    result = db_conn.isCheckedOut(equipID)
+    if result == 0: return 2
+    elif result == 1: 
+        result = db_conn.isCheckedOut(equipID, userID)
+        if result == 0: return 3
+        elif result == 1:
+            if db_conn.returns(userID, equipID): return 0
+            else: return 6
+        elif result == 2: return 6
+    elif result == 2: return 6
+
 #0 = Add successful
 #1 = User already exists with given ID
 #2 = User does not have the permission to create a user with this permission value
@@ -239,64 +343,6 @@ def updateEquipment(equipID, desc = None, skills = None):
     if db_conn.updateEquipment(equipID, desc, skills): return 0
     else: return 4
 
-#0 = Checkout successful
-#1 = User does not have the requisite skills to check out equipment
-#2 = Equipment does not exist
-#3 = Another user already has this equipment checked out
-#4 = Current user already has this equipment checked out
-#5 = Input field is blank
-#6 = Equipment ID is not a number
-#7 = Unexpected error
-def checkout(userID, equipID):
-    if equipID == "": return 5
-    if not equipID.isdigit(): return 6
-    if db_conn.getEquipment(equipID) == None: return 2
-    result = db_conn.isCheckedOut(equipID)
-    if result == 0:
-        userSkills, equipSkills = db_conn.getUser(userID)[4], db_conn.getEquipment(equipID)[2]
-        if equipSkills == 0 or equipSkills == userSkills:
-            if db_conn.checkout(userID, equipID): return 0
-            else: return 7
-        else: return 1
-    elif result == 1:
-        result = db_conn.isCheckedOut(equipID, userID)
-        if result == 0: return 3
-        elif result == 1: return 4
-        elif result == 2: return 7
-    elif result == 2: return 7
-
-#0 = Return successful
-#1 = Equipment does not exist
-#2 = No user has equipment checked out
-#3 = Current user does not have equipment checked out
-#4 = Input field is blank
-#5 = Equipment ID is not a number
-#6 = Unexpected error
-def returns(userID, equipID):
-    if equipID == "": return 4
-    if not equipID.isdigit(): return 5
-    if db_conn.getEquipment(equipID) == None: return 1
-    result = db_conn.isCheckedOut(equipID)
-    if result == 0: return 2
-    elif result == 1: 
-        result = db_conn.isCheckedOut(equipID, userID)
-        if result == 0: return 3
-        elif result == 1:
-            if db_conn.returns(userID, equipID): return 0
-            else: return 6
-        elif result == 2: return 6
-    elif result == 2: return 6
-
-def getAllUsers():
-    report, text = db_conn.generateReport(db_conn.REPORT_TYPE_ALL_USERS), ""
-    for data in report: text = text + "ID#: " + str(data[0]) + " | Name: " + data[1] + " | Skills: " + str(data[2]) + " | Permission: " + str(data[3]) + '\n' 
-    return text
-
-def getAllEquipment():
-    report, text = db_conn.generateReport(db_conn.REPORT_TYPE_ALL_EQUIPMENT), ""
-    for data in report: text = text + "ID#: " + str(data[0]) + " | Name: " + data[1] + " | Skills: " + str(data[2]) + '\n' 
-    return text
-
 def getAllCheckouts():
     report, text = db_conn.generateReport(db_conn.REPORT_TYPE_ALL_CHECKOUTS), ""
     for data in report: text = text + "Employee: " + data[0] + " | Equipment: " + data[1] + " | Checkout Time: " + data[2] + '\n' 
@@ -318,11 +364,6 @@ def getEmployeeAll(userID):
     for data in report: text = text + "Equipment: " + data[0] + " | Checkout Time: " + data[1] + " | Return Time: " + data[2] + '\n' 
     return text
 
-def getEmployeeCheckouts(userID):
-    report, text = db_conn.generateReport(db_conn.REPORT_TYPE_SELECT_USER_CHECKOUTS, userID), ""
-    for data in report: text = text + "Equipment: " + data[0] + " | Checkout Time: " + data[1] + '\n' 
-    return text
-
 #x = Equipment does not exist
 #y = Input field is blank
 #z = Equipment ID is not a number
@@ -334,62 +375,24 @@ def getEquipmentAll(equipID):
     for data in report: text = text + "Employee: " + data[0] + " | Checkout Time: " + data[1] + " | Return Time: " + data[2] + '\n' 
     return text
 
-#0 = Password changed successfully
-#1 = Passwords do not match
-#2 = Password length is too short
-#3 = Unexpected error
-def firstLoginPasswordChange(userID, newPassword, verify):
-    if newPassword != verify: return 1
-    if len(newPassword) < 6: return 2
-    salt = os.urandom(32)
-    key = hashlib.pbkdf2_hmac('sha256', newPassword.encode('utf-8'), salt, 100000)
-    if db_conn.updateUser(userID, password = salt + key): return 0
-    else: return 3
 
-#0 = User not found
-#1 = Incorrect Password
-#2 = First login
-#3 = Employee authenticated
-#4 = Manager authenticated
-#5 = Input field is blank
-#6 = User ID is not a number
-def login(userID, inputPassword):
-    if userID == "" or inputPassword == "": return 5
-    if not userID.isdigit(): return 6
-    userData = db_conn.getUser(userID)
-    if userData != None:
-        userPassword = userData[3]
-        if userPassword == db_conn.DEFAULT_PASSWORD: 
-            if inputPassword == userPassword: return 2
-            else: return 1
-        else:
-            salt, key = userPassword[:32], userPassword[32:]
-            if key == hashlib.pbkdf2_hmac('sha256', inputPassword.encode('utf-8'), salt, 100000):
-                if userData[5] == 0: return 3
-                else: return 4
-            else: return 1
-    else: return 0
 
-def main():
-    while True:
-        userID, password = input("Enter your ID number: "), input("Enter your password: ")
-        authenticated = login(userID, password)
-        if authenticated == 0 or authenticated == 1: print("Incorrect ID/Password Combination!")
-        elif authenticated == 2:
-            print("This is your first time logging in. You must change your password.")
-            while True:
-                newPassword, verify = input("Enter your new password: "), input("Verify your new password: ")
-                result = firstLoginPasswordChange(userID, newPassword, verify)
-                if result == 0:
-                    print("Password successfully changed. Please log in with your new password.")
-                    break
-                elif result == 1: print("Passwords do not match!")
-                elif result == 2: print("Password is too short! Your password must be at least 6 characters")
-                elif result == 3: print("Unexpected error!")
-        elif authenticated == 3: employeeMenu(userID)
-        elif authenticated == 4: managerMenu(userID)
-        elif authenticated == 5: print("Fields can not be blank!")
-        elif authenticated == 6: print("User ID must be a number!")
+def getEmployeeCheckouts(userID):
+    report, text = db_conn.generateReport(db_conn.REPORT_TYPE_SELECT_USER_CHECKOUTS, userID), ""
+    for data in report: text = text + "Equipment: " + data[0] + " | Checkout Time: " + data[1] + '\n' 
+    return text
+
+def getAllUsers():
+    report, text = db_conn.generateReport(db_conn.REPORT_TYPE_ALL_USERS), ""
+    for data in report: text = text + "ID#: " + str(data[0]) + " | Name: " + data[1] + " | Skills: " + str(data[2]) + " | Permission: " + str(data[3]) + '\n' 
+    return text
+
+def getAllEquipment():
+    report, text = db_conn.generateReport(db_conn.REPORT_TYPE_ALL_EQUIPMENT), ""
+    for data in report: text = text + "ID#: " + str(data[0]) + " | Name: " + data[1] + " | Skills: " + str(data[2]) + '\n' 
+    return text
+
+
 
 if __name__ == "__main__":
     main()
