@@ -285,12 +285,12 @@ def removeUser(managerID, userID):
 #4 = User ID field is blank
 #5 = User ID, skills, or permission is not a number
 #6 = Unexpected error
-def updateUser(managerID, userID, nameF = None, nameL = None, password = False, skills = None, permission = None):
+def updateUser(managerID, userID, nameF = None, nameL = None, password = 0, skills = None, permission = None):
     if userID == "": return 4
     if not userID.isdigit(): return 5
     if nameF == "": nameF = None
     if nameL == "": nameL = None
-    resetPassword = db_conn.DEFAULT_PASSWORD if password else None
+    resetPassword = db_conn.DEFAULT_PASSWORD if password == 1 else None
     if skills == "": skills = None
     elif not skills.isdigit(): return 5
     if permission == "": permission = None
@@ -361,7 +361,7 @@ def getEmployeeAll(userID):
     if not userID.isdigit(): return "z"
     if db_conn.getUser(userID) == None: return "x"
     report, text = db_conn.generateReport(db_conn.REPORT_TYPE_SELECT_USER_ALL, userID), ""
-    for data in report: text = text + "Equipment: " + data[0] + " | Checkout Time: " + data[1] + " | Return Time: " + data[2] + '\n' 
+    for data in report: text = text + data[0] + " | Checkout Time: " + data[1] + " | Return Time: " + data[2] + '\n' 
     return text
 
 #x = Equipment does not exist
@@ -372,27 +372,36 @@ def getEquipmentAll(equipID):
     if not equipID.isdigit(): return "z"
     if db_conn.getEquipment(equipID) == None: return "x"
     report, text = db_conn.generateReport(db_conn.REPORT_TYPE_SELECT_EQUIP_ALL, equipID), ""
-    for data in report: text = text + "Employee: " + data[0] + " | Checkout Time: " + data[1] + " | Return Time: " + data[2] + '\n' 
+    for data in report: text = text + data[0] + " | Checkout Time: " + data[1] + " | Return Time: " + data[2] + '\n' 
     return text
 
 
 
+def getUserNameplate(userID):
+    data = db_conn.getUser(userID)
+    return "#" + str(data[0]) + " " + data[1] + " " + data[2]
+
+def getEquipNameplate(equipID):
+    data = db_conn.getEquipment(equipID)
+    return "#" + str(data[0]) + " " + data[1]
+
 def getEmployeeCheckouts(userID):
     report, text = db_conn.generateReport(db_conn.REPORT_TYPE_SELECT_USER_CHECKOUTS, userID), ""
-    for data in report: text = text + "Equipment: " + data[0] + " | Checkout Time: " + data[1] + '\n' 
+    for data in report: text = text + data[0] + " | Checkout Time: " + data[1] + '\n' 
     return text
 
 def getAllUsers():
     report, text = db_conn.generateReport(db_conn.REPORT_TYPE_ALL_USERS), ""
-    for data in report: text = text + "ID#: " + str(data[0]) + " | Name: " + data[1] + " | Skills: " + str(data[2]) + " | Permission: " + str(data[3]) + '\n' 
+    for data in report: text = text + data[0] + " | Skills: " + str(data[1]) + " | Permission: " + str(data[2]) + '\n' 
     return text
 
 def getAllEquipment():
     report, text = db_conn.generateReport(db_conn.REPORT_TYPE_ALL_EQUIPMENT), ""
-    for data in report: text = text + "ID#: " + str(data[0]) + " | Name: " + data[1] + " | Skills: " + str(data[2]) + '\n' 
+    for data in report: text = text + data[0] + " | Skills: " + str(data[1]) + '\n' 
     return text
 
 
 
 if __name__ == "__main__":
+    db_conn.initialize()
     main()

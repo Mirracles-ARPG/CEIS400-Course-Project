@@ -68,6 +68,8 @@ def initialize():
             returnDateTime TEXT NOT NULL ,
             FOREIGN KEY (user) REFERENCES users (identification) ON DELETE CASCADE ON UPDATE CASCADE ,
             FOREIGN KEY (equipment) REFERENCES equipment (identification) ON DELETE CASCADE ON UPDATE CASCADE )""")
+        #A root user is created with an ID of 0, the default password, and a permission level of 99
+        if getUser(0) == None: c.execute(" INSERT INTO users VALUES (0, 'root', 'user', ?, 0, 99) ", [(DEFAULT_PASSWORD)])
         db.commit()   #Save all changes made to database
         db.close()    #Close the connection to database
         return True   #Notify that this function call completed successfully
@@ -87,7 +89,6 @@ def reset():
     db.commit()     #Save all changes made to database
     db.close()      #Close the connection to database
     initialize()    #All of the tables are reinitialized
-    addUser(0, "root", "user", 0, 99)   #A root user is created with an ID of 0, the default password, and a permission level of 99
 
 #Adds a new user into the users table
 #Arguements userID, nameF, nameL, skills, and permission correspond to the users table columns respectively
@@ -318,43 +319,45 @@ def generateReport(reportType, idNum = None):
     arg2 = [REPORT_TYPE_SELECT_USER_ALL, REPORT_TYPE_SELECT_EQUIP_ALL]
     switch = {  #Dictionary containing report queries keyed to the global REPORT_TYPE variables
         REPORT_TYPE_ALL_USERS: ("""
-            SELECT identification, nameFirst || ' ' || nameLast AS name, skills, permission
+            SELECT '#' || identification || ' ' || nameFirst || ' ' || nameLast AS name, skills, permission
             FROM users
             ORDER BY identification """),
         REPORT_TYPE_ALL_EQUIPMENT: ("""
-            SELECT *
+            SELECT '#' || identification || ' ' || description AS name, skills
             FROM equipment
             ORDER BY identification """),
         REPORT_TYPE_ALL_CHECKOUTS: (""" 
-            SELECT nameFirst || ' ' || nameLast AS name, description, checkoutDateTime
+            SELECT '#' || checkouts.user || ' ' || nameFirst || ' ' || nameLast AS username,
+                '#' || checkouts.equipment || ' ' || description AS equipname, checkoutDateTime
             FROM checkouts JOIN users ON users.identification = checkouts.user
                 JOIN equipment ON equipment.identification = checkouts.equipment
             ORDER BY checkoutDateTime """),
         REPORT_TYPE_ALL_RETURN_LOGS: ("""
-            SELECT nameFirst || ' ' || nameLast AS name, description, checkoutDateTime, returnDateTime
+            SELECT '#' || returnLog.user || ' ' || nameFirst || ' ' || nameLast AS username,
+                '#' || returnLog.equipment || ' ' || description AS equipname, checkoutDateTime, returnDateTime
             FROM returnLog JOIN users ON users.identification = returnLog.user
                 JOIN equipment ON equipment.identification = returnLog.equipment
             ORDER BY returnDateTime """),
         REPORT_TYPE_SELECT_USER_ALL: ("""
-            SELECT description, checkoutDateTime, returnDateTime
+            SELECT '#' || returnLog.equipment || ' ' || description AS name, checkoutDateTime, returnDateTime
             FROM returnLog JOIN equipment ON equipment.identification = returnLog.equipment
             WHERE user = ?
             UNION ALL
-            SELECT description, checkoutDateTime, 'N/A' 
+            SELECT '#' || checkouts.equipment || ' ' || description AS name, checkoutDateTime, 'N/A' 
             FROM checkouts JOIN equipment ON equipment.identification = checkouts.equipment
             WHERE user = ?
             ORDER BY checkoutDateTime """),
         REPORT_TYPE_SELECT_USER_CHECKOUTS: ("""
-            SELECT description, checkoutDateTime
+            SELECT '#' || checkouts.equipment || ' ' || description AS name, checkoutDateTime
             FROM checkouts JOIN equipment ON equipment.identification = checkouts.equipment
             WHERE user = ?
             ORDER BY checkoutDateTime """),
         REPORT_TYPE_SELECT_EQUIP_ALL: ("""
-            SELECT nameFirst || ' ' || nameLast AS name, checkoutDateTime, returnDateTime
+            SELECT '#' || returnLog.user || ' ' || nameFirst || ' ' || nameLast AS name, checkoutDateTime, returnDateTime
             FROM returnLog JOIN users ON users.identification = returnLog.user
             WHERE equipment = ?
             UNION ALL
-            SELECT nameFirst || ' ' || nameLast AS name, checkoutDateTime, 'N/A' 
+            SELECT '#' || checkouts.user || ' ' || nameFirst || ' ' || nameLast AS name, checkoutDateTime, 'N/A' 
             FROM checkouts JOIN users ON users.identification = checkouts.user
             WHERE equipment = ?
             ORDER BY checkoutDateTime """)}
