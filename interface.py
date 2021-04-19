@@ -55,12 +55,12 @@ def loadManagerMenu():
     btnGenReport.grid(row = 2, column = 0, sticky = "EW")
     btnLogout.grid(row = 3, column = 0, sticky = "EW")
 
-    if CURRENTLY_LOGGED_IN == "0":
-        btnReset = tk.Button(rootMenuFrame, text = "RESET", command = lambda: reset())
-        btnReset.grid(row = 4, column = 0, sticky = "EW", pady = 30)
-        def reset():
-            application.db_conn.reset()
-            logout()
+    #if CURRENTLY_LOGGED_IN == "0":
+        #btnReset = tk.Button(rootMenuFrame, text = "RESET", command = lambda: reset())
+        #btnReset.grid(row = 4, column = 0, sticky = "EW", pady = 30)
+        #def reset():
+            #application.db_conn.reset()
+            #logout()
 
 def loadUsersSubMenu():
     unloadCurrentMenu()
@@ -127,6 +127,7 @@ def displayInRootConsole(text):
 def loginWindow():
     top = tk.Toplevel()
     top.title('Login')
+    top.geometry("+%d+%d" % (root.winfo_x() + 90, root.winfo_y() + 50))
     top.resizable(0, 0)
     top.attributes('-toolwindow', True)
     top.grab_set()
@@ -187,6 +188,7 @@ def loginWindow():
 def firstLoginWindow(userID):
     top = tk.Toplevel()
     top.title('Change Password')
+    top.geometry("+%d+%d" % (root.winfo_x() + 90, root.winfo_y() + 50))
     top.resizable(0, 0)
     top.attributes('-toolwindow', True)
     top.grab_set()
@@ -238,6 +240,7 @@ def firstLoginWindow(userID):
 def checkoutWindow():
     top = tk.Toplevel()
     top.title('Checkout')
+    top.geometry("+%d+%d" % (root.winfo_x() + 90, root.winfo_y() + 50))
     top.resizable(0, 0)
     top.attributes('-toolwindow', True)
     top.grab_set()
@@ -300,6 +303,7 @@ def checkoutWindow():
 def returnWindow():
     top = tk.Toplevel()
     top.title('Return')
+    top.geometry("+%d+%d" % (root.winfo_x() + 90, root.winfo_y() + 50))
     top.resizable(0, 0)
     top.attributes('-toolwindow', True)
     top.grab_set()
@@ -358,6 +362,7 @@ def returnWindow():
 def addUserWindow():
     top = tk.Toplevel()
     top.title('Add New User')
+    top.geometry("+%d+%d" % (root.winfo_x() + 90, root.winfo_y() + 50))
     top.resizable(0, 0)
     top.attributes('-toolwindow', True)
     top.grab_set()
@@ -430,6 +435,7 @@ def addUserWindow():
 def removeUserWindow():
     top = tk.Toplevel()
     top.title('Remove a User')
+    top.geometry("+%d+%d" % (root.winfo_x() + 90, root.winfo_y() + 50))
     top.resizable(0, 0)
     top.attributes('-toolwindow', True)
     top.grab_set()
@@ -484,6 +490,7 @@ def removeUserWindow():
 def modifyUserWindow():
     top = tk.Toplevel()
     top.title('Modify a User')
+    top.geometry("+%d+%d" % (root.winfo_x() + 90, root.winfo_y() + 50))
     top.resizable(0, 0)
     top.attributes('-toolwindow', True)
     top.grab_set()
@@ -554,6 +561,14 @@ def modifyUserWindow():
             entID.focus_set()
             entID.selection_adjust(tk.END)
         elif result == 6:
+            messagebox.showerror(message = "You can not modify the root user!")
+            entID.focus_set()
+            entID.selection_adjust(tk.END)
+        elif result == 7:
+            messagebox.showerror(message = "You can not modify yourself!")
+            entID.focus_set()
+            entID.selection_adjust(tk.END)
+        elif result == 8:
             messagebox.showerror(message = "Unexpected error!")
             entID.focus_set()
             entID.selection_adjust(tk.END)
@@ -563,6 +578,7 @@ def modifyUserWindow():
 def addEquipWindow():
     top = tk.Toplevel()
     top.title('Add New Equipment')
+    top.geometry("+%d+%d" % (root.winfo_x() + 90, root.winfo_y() + 50))
     top.resizable(0, 0)
     top.attributes('-toolwindow', True)
     top.grab_set()
@@ -623,6 +639,7 @@ def addEquipWindow():
 def removeEquipWindow():
     top = tk.Toplevel()
     top.title('Remove Equipment')
+    top.geometry("+%d+%d" % (root.winfo_x() + 90, root.winfo_y() + 50))
     top.resizable(0, 0)
     top.attributes('-toolwindow', True)
     top.grab_set()
@@ -673,6 +690,7 @@ def removeEquipWindow():
 def modifyEquipWindow():
     top = tk.Toplevel()
     top.title('Modify Equipment')
+    top.geometry("+%d+%d" % (root.winfo_x() + 90, root.winfo_y() + 50))
     top.resizable(0, 0)
     top.attributes('-toolwindow', True)
     top.grab_set()
@@ -733,6 +751,7 @@ def modifyEquipWindow():
 def reportSpecificUserWindow():
     top = tk.Toplevel()
     top.title('Generate User Report')
+    top.geometry("+%d+%d" % (root.winfo_x() + 90, root.winfo_y() + 50))
     top.resizable(0, 0)
     top.attributes('-toolwindow', True)
     top.grab_set()
@@ -779,6 +798,7 @@ def reportSpecificUserWindow():
 def reportSpecificEquipWindow():
     top = tk.Toplevel()
     top.title('Generate Equipment Report')
+    top.geometry("+%d+%d" % (root.winfo_x() + 90, root.winfo_y() + 50))
     top.resizable(0, 0)
     top.attributes('-toolwindow', True)
     top.grab_set()

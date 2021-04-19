@@ -284,10 +284,14 @@ def removeUser(managerID, userID):
 #3 = User does not have the permission to set user permission to this value
 #4 = User ID field is blank
 #5 = User ID, skills, or permission is not a number
-#6 = Unexpected error
+#6 = Attempt to modify root
+#7 = Attempt to modify self
+#8 = Unexpected error
 def updateUser(managerID, userID, nameF = None, nameL = None, password = 0, skills = None, permission = None):
     if userID == "": return 4
     if not userID.isdigit(): return 5
+    if userID == 0: return 6
+    if managerID == userID: return 7
     if nameF == "": nameF = None
     if nameL == "": nameL = None
     resetPassword = db_conn.DEFAULT_PASSWORD if password == 1 else None
@@ -302,7 +306,7 @@ def updateUser(managerID, userID, nameF = None, nameL = None, password = 0, skil
     if permission != None:
         if int(permission) >= managerPermission: return 3
     if db_conn.updateUser(userID, nameF, nameL, resetPassword, skills, permission): return 0
-    else: return 6
+    else: return 8
 
 #0 = Add successful
 #1 = Equipment already exists with given ID

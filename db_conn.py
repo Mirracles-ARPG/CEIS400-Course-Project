@@ -14,68 +14,63 @@ REPORT_TYPE_SELECT_EQUIP_ALL = 6
 def initialize():
     with sqlite3.connect("database.db") as db: #Connection established to database
         c = db.cursor() #Cursor object created
-    try: #Attempts to execute the following SQL commands
-        #users table holds data relevant to employees and managers
-        #dentification is the number that uniquely identifies an employee for all company systems
-        #nameFirst and nameLast are self explanatory
-        #password stores 96 bytes of authentication data. The first 32 bytes are the salt, and the last 64 the key
-        #skills allows you to constrain certain equipment checkouts to only users with matching skill numbers
-        #permission determines if the user has employee or manager status. Employees have permission 0. Managers have permission >0
-        #Managers can only make changes to users with a lower permission number than them
-        #Managers can not change a users permission to be equal to or greater than theirs
-        c.execute(""" CREATE TABLE IF NOT EXISTS users (
-            identification INTEGER PRIMARY KEY ,
-            nameFirst TEXT NOT NULL ,
-            nameLast TEXT NOT NULL ,
-            password TEXT NOT NULL ,
-            skills INTEGER NOT NULL ,
-            permission INTEGER NOT NULL )
-            WITHOUT ROWID """)
-        #equipment table holds data relevant to items in the equipment depot which can be checked out
-        #identification is the number that uniquely identifies a piece of equipment from other similar equipment
-        #description gives a text explanation of what the equipment is
-        #skills allows you to constrain certain equipment checkouts to only users with matching skill numbers
-        c.execute(""" CREATE TABLE IF NOT EXISTS equipment (
-            identification INTEGER PRIMARY KEY ,
-            description TEXT NOT NULL ,
-            skills INTEGER NOT NULL )
-            WITHOUT ROWID """)
-        #checkouts binds together a user and equipment for a period of time while they are in possession and responsible for it
-        #user is linked to the identification column of the users table
-        #equipment is linked to the identification column of the equipment table
-        #checkoutDateTime stores the exact time the entry was created
-        #This tables unique identifier is a combination of the user and equipment identification numbers
-        #Any changes made to users or equipment entries will also apply to any relevant entries in this table
-        c.execute(""" CREATE TABLE IF NOT EXISTS checkouts (
-            user INTEGER ,
-            equipment INTEGER UNIQUE ,
-            checkoutDateTime TEXT NOT NULL ,
-            PRIMARY KEY (user, equipment) ,
-            FOREIGN KEY (user) REFERENCES users (identification) ON DELETE CASCADE ON UPDATE CASCADE ,
-            FOREIGN KEY (equipment) REFERENCES equipment (identification) ON DELETE CASCADE ON UPDATE CASCADE )
-            WITHOUT ROWID """)
-        #returnLog holds a permanent record of all concluded user checkouts. When checkouts end they are automatically moved here
-        #user is linked to the identification column of the users table
-        #equipment is linked to the identification column of the equipment table
-        #checkoutDateTime stores the exact time the prior checkout entry was created
-        #returnDateTime stores the exact time the entry was created
-        #This tables unique identifier is the implicit rowid column in sqlite3
-        #Any changes made to users or equipment entries will also apply to any relevant entries in this table
-        c.execute(""" CREATE TABLE IF NOT EXISTS returnLog (
-            user INTEGER NOT NULL ,
-            equipment INTEGER NOT NULL ,
-            checkoutDateTime TEXT NOT NULL ,
-            returnDateTime TEXT NOT NULL ,
-            FOREIGN KEY (user) REFERENCES users (identification) ON DELETE CASCADE ON UPDATE CASCADE ,
-            FOREIGN KEY (equipment) REFERENCES equipment (identification) ON DELETE CASCADE ON UPDATE CASCADE )""")
-        #A root user is created with an ID of 0, the default password, and a permission level of 99
-        if getUser(0) == None: c.execute(" INSERT INTO users VALUES (0, 'root', 'user', ?, 0, 99) ", [(DEFAULT_PASSWORD)])
-        db.commit()   #Save all changes made to database
-        db.close()    #Close the connection to database
-        return True   #Notify that this function call completed successfully
-    except Exception: #If an exception occurs
-        db.close()    #this ensures the database connection closes properly
-        return False  #and then notifies that this function call encountered an exception
+    #users table holds data relevant to employees and managers
+    #dentification is the number that uniquely identifies an employee for all company systems
+    #nameFirst and nameLast are self explanatory
+    #password stores 96 bytes of authentication data. The first 32 bytes are the salt, and the last 64 the key
+    #skills allows you to constrain certain equipment checkouts to only users with matching skill numbers
+    #permission determines if the user has employee or manager status. Employees have permission 0. Managers have permission >0
+    #Managers can only make changes to users with a lower permission number than them
+    #Managers can not change a users permission to be equal to or greater than theirs
+    c.execute(""" CREATE TABLE IF NOT EXISTS users (
+        identification INTEGER PRIMARY KEY ,
+        nameFirst TEXT NOT NULL ,
+        nameLast TEXT NOT NULL ,
+        password TEXT NOT NULL ,
+        skills INTEGER NOT NULL ,
+        permission INTEGER NOT NULL )
+        WITHOUT ROWID """)
+    #equipment table holds data relevant to items in the equipment depot which can be checked out
+    #identification is the number that uniquely identifies a piece of equipment from other similar equipment
+    #description gives a text explanation of what the equipment is
+    #skills allows you to constrain certain equipment checkouts to only users with matching skill numbers
+    c.execute(""" CREATE TABLE IF NOT EXISTS equipment (
+        identification INTEGER PRIMARY KEY ,
+        description TEXT NOT NULL ,
+        skills INTEGER NOT NULL )
+        WITHOUT ROWID """)
+    #checkouts binds together a user and equipment for a period of time while they are in possession and responsible for it
+    #user is linked to the identification column of the users table
+    #equipment is linked to the identification column of the equipment table
+    #checkoutDateTime stores the exact time the entry was created
+    #This tables unique identifier is a combination of the user and equipment identification numbers
+    #Any changes made to users or equipment entries will also apply to any relevant entries in this table
+    c.execute(""" CREATE TABLE IF NOT EXISTS checkouts (
+        user INTEGER ,
+        equipment INTEGER UNIQUE ,
+        checkoutDateTime TEXT NOT NULL ,
+        PRIMARY KEY (user, equipment) ,
+        FOREIGN KEY (user) REFERENCES users (identification) ON DELETE CASCADE ON UPDATE CASCADE ,
+        FOREIGN KEY (equipment) REFERENCES equipment (identification) ON DELETE CASCADE ON UPDATE CASCADE )
+        WITHOUT ROWID """)
+    #returnLog holds a permanent record of all concluded user checkouts. When checkouts end they are automatically moved here
+    #user is linked to the identification column of the users table
+    #equipment is linked to the identification column of the equipment table
+    #checkoutDateTime stores the exact time the prior checkout entry was created
+    #returnDateTime stores the exact time the entry was created
+    #This tables unique identifier is the implicit rowid column in sqlite3
+    #Any changes made to users or equipment entries will also apply to any relevant entries in this table
+    c.execute(""" CREATE TABLE IF NOT EXISTS returnLog (
+        user INTEGER NOT NULL ,
+        equipment INTEGER NOT NULL ,
+        checkoutDateTime TEXT NOT NULL ,
+        returnDateTime TEXT NOT NULL ,
+        FOREIGN KEY (user) REFERENCES users (identification) ON DELETE CASCADE ON UPDATE CASCADE ,
+        FOREIGN KEY (equipment) REFERENCES equipment (identification) ON DELETE CASCADE ON UPDATE CASCADE )""")
+    #A root user is created with an ID of 0, the default password, and a permission level of 99
+    if getUser(0) == None: c.execute(" INSERT INTO users VALUES (0, 'root', 'user', ?, 0, 99) ", [(DEFAULT_PASSWORD)])
+    db.commit()   #Save all changes made to database
+    db.close()    #Close the connection to database
 
 #Rests the database to its default state
 def reset():
